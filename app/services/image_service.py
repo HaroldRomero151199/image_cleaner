@@ -3,6 +3,9 @@ from typing import List
 from fastapi import UploadFile
 import os
 import uuid
+from rembg import remove
+from PIL import Image
+import io
 
 # Directory names
 INPUT_DIR = "input"
@@ -33,5 +36,26 @@ def process_images_with_rembg(ean: str, input_paths: List[str]) -> List[str]:
     Process images with rembg and save to static/{ean}/output/ using the same filename as input.
     Returns list of processed file paths.
     """
-    # TODO: Implement rembg logic
-    pass
+    output_paths = []
+    output_dir = Path("static") / ean / OUTPUT_DIR
+    os.makedirs(output_dir, exist_ok=True)
+
+    for input_path in input_paths:
+        try:
+            # Open image
+            with open(input_path, "rb") as f:
+                input_bytes = f.read()
+            input_image = Image.open(io.BytesIO(input_bytes))
+
+            # Remove background
+            output_image = remove(input_image)
+
+            # Save output image with same filename in output dir
+            filename = Path(input_path).name
+            output_path = output_dir / filename
+            output_image.save(output_path)
+            output_paths.append(str(output_path))
+        except Exception as e:
+            # Optionally, log error or skip file
+            continue
+    return output_paths
