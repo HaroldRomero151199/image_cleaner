@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 # Import routers
-from routes.upload import router as upload_router
-from routes.images import router as images_router
-from routes.accept import router as accept_router
+from app.routes.upload import router as upload_router
+from app.routes.images import router as images_router
+from app.routes.accept import router as accept_router
 
 app = FastAPI(title="Image Service API")
 

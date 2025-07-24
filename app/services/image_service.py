@@ -12,13 +12,13 @@ INPUT_DIR = "input"
 OUTPUT_DIR = "output"
 
 
-def save_original_images(ean: str, files: List[UploadFile]) -> List[str]:
+def save_original_images(ean: str, files: List[UploadFile], base_url: str) -> List[str]:
     """
     Save uploaded images to static/{ean}/input/ using the original filename.
     If no filename, use a UUID. Overwrites if the file already exists.
-    Returns list of saved file paths.
+    Returns list of saved file URLs.
     """
-    saved_paths = []
+    saved_urls = []
     base_dir = Path("static") / ean / INPUT_DIR
     os.makedirs(base_dir, exist_ok=True)
 
@@ -27,16 +27,16 @@ def save_original_images(ean: str, files: List[UploadFile]) -> List[str]:
         file_path = base_dir / filename
         with open(file_path, "wb") as f:
             f.write(file.file.read())
-        saved_paths.append(str(file_path))
-    return saved_paths
+        saved_urls.append(f"{base_url}static/{ean}/input/{filename}")
+    return saved_urls
 
 
-def process_images_with_rembg(ean: str, input_paths: List[str]) -> List[str]:
+def process_images_with_rembg(ean: str, input_paths: List[str], base_url: str) -> List[str]:
     """
     Process images with rembg and save to static/{ean}/output/ using the same filename as input.
-    Returns list of processed file paths.
+    Returns list of processed file URLs.
     """
-    output_paths = []
+    output_urls = []
     output_dir = Path("static") / ean / OUTPUT_DIR
     os.makedirs(output_dir, exist_ok=True)
 
@@ -54,8 +54,8 @@ def process_images_with_rembg(ean: str, input_paths: List[str]) -> List[str]:
             filename = Path(input_path).name
             output_path = output_dir / filename
             output_image.save(output_path)
-            output_paths.append(str(output_path))
+            output_urls.append(f"{base_url}static/{ean}/output/{filename}")
         except Exception as e:
             # Optionally, log error or skip file
             continue
-    return output_paths
+    return output_urls
