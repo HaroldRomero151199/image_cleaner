@@ -1,67 +1,58 @@
 # Product Image Cleaner
 
-A FastAPI-based web service for uploading, processing, and serving product images. It allows users to upload images, automatically removes backgrounds, and provides access to both original and processed images.
+Servicio web FastAPI para subir imágenes de productos y quitar el fondo automáticamente usando rembg.
 
----
+## Características
 
-## Features
-- Upload product images (input)
-- Automatic background removal (output)
-- List and download images by product EAN
-- REST API endpoints
-- Docker support
+- Subir imágenes de productos
+- Quitar fondo automáticamente
+- API REST para listar y descargar imágenes
+- Soporte para GPU (más rápido)
 
----
+## Instalación y Uso (Docker)
 
-## Installation & Usage
+Este proyecto está diseñado para ejecutarse con Docker. Por defecto, intenta utilizar la GPU para un procesamiento óptimo.
 
-### Requirements
-- Python 3.10+
-- pip
-- (Optional) Docker
+### Prerrequisitos
 
-### 1. (Recommended) Create and activate a virtual environment
-It is recommended to use a virtual environment to isolate project dependencies, but it is not strictly required:
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows
-# or
-source .venv/bin/activate  # On Linux/Mac
+1.  **Docker** y **Docker Compose** instalados.
+2.  **(Solo para modo GPU)**: Drivers de NVIDIA y [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) instalados en el host.
+
+### Pasos para ejecutar
+
+1.  **Construir y arrancar el servicio:**
+    ```bash
+    docker-compose up --build
+    ```
+
+2.  **Verificar funcionamiento:**
+    - Documentación API: http://localhost:8000/docs
+    - Estado del hardware: http://localhost:8000/ (debería mostrar `"using_gpu": true` si la GPU está activa)
+
+### ¿Tienes problemas o no tienes GPU? (Modo CPU)
+
+El archivo `docker-compose.yml` está configurado por defecto para **exigir** una GPU NVIDIA. Si no tienes una GPU o no tienes configurado el NVIDIA Container Toolkit, el contenedor no iniciará.
+
+Para correrlo solo con **CPU**, edita el archivo `docker-compose.yml` y **comenta o elimina** la sección `deploy`:
+
+```yaml
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
 ```
 
-### 2. Install dependencies
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
+## Uso de la API
 
-### 3. Run the application
-```bash
-uvicorn main:app --reload
-```
+1.  Usa el endpoint `/upload/{ean}` para subir imágenes.
+2.  Las imágenes procesadas se guardarán en `/static/{ean}/output/`.
 
-### 4. Using Docker (optional)
-```bash
-docker build -t product-image-cleaner .
-docker run -p 8000:8000 product-image-cleaner
-```
+## Estructura
 
----
-
-## Folder Structure
-
-- `app/` - Main application code
-  - `routes/` - API endpoints
-  - `services/` - Business logic
-  - `utils/` - Utilities
-- `static/` - Product images (input/output). **Content is git-ignored, only structure is tracked.**
-- `requirements.txt` - Python dependencies
-- `Dockerfile` - Docker configuration
-
----
-
-## Notes
-- The `static/` folder is used to store uploaded and processed images. Its content is ignored by git, but the folder and its structure are included for clarity.
-- See `static/README.md` for more info.
-
----
+- `app/` - Código de la aplicación
+- `static/` - Imágenes subidas y procesadas
+- `Dockerfile` - Imagen Docker (preparada para CUDA 12.x)
+- `docker-compose.yml` - Configuración del servicio
