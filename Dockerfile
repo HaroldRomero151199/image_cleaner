@@ -18,9 +18,12 @@ WORKDIR /app
 
 # Copia e instala requerimientos primero para aprovechar cache de Docker
 COPY requirements.txt .
+# PROBLEMA: rembg instala onnxruntime (CPU) como dependencia, corrompiendo onnxruntime-gpu
+# SOLUCIÓN: Instalar todo, luego forzar SOLO onnxruntime-gpu
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip uninstall -y onnxruntime
+    pip uninstall -y onnxruntime && \
+    pip install --no-cache-dir --force-reinstall onnxruntime-gpu
 
 # Copia todo el código de la app
 COPY . .

@@ -1,6 +1,7 @@
 fastapi==0.110.1
 uvicorn[standard]==0.29.0
-rembg[gpu]==2.0.52
 python-multipart==0.0.9
 pillow==10.3.0
 numpy<2.0.0
+onnxruntime-gpu
+rembg==2.0.52
