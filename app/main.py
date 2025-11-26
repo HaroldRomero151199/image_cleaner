@@ -12,17 +12,14 @@ from app.routes.accept import router as accept_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize rembg session on startup with GPU priority."""
-    try:
-        session = _get_rembg_session()
-        hardware = get_hardware_status()
-        
-        if hardware["using_gpu"]:
-            print(f"✓ rembg initialized with GPU: {hardware['provider']}")
-        else:
-            print(f"✓ rembg initialized with CPU: {hardware['provider']}")
-    except Exception as e:
-        print(f"✗ Error initializing rembg session: {str(e)}")
-        print("  Application will attempt to initialize session on first use")
+    # Let exceptions propagate to prevent startup with a broken state.
+    session = _get_rembg_session()
+    hardware = get_hardware_status()
+
+    if hardware["using_gpu"]:
+        print(f"✓ rembg initialized with GPU: {hardware['provider']}")
+    else:
+        print(f"✓ rembg initialized with CPU: {hardware['provider']}")
     
     yield  # Application runs here
     
