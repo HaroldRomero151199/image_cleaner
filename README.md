@@ -1,67 +1,58 @@
 # Product Image Cleaner
 
-A FastAPI-based web service for uploading, processing, and serving product images. It allows users to upload images, automatically removes backgrounds, and provides access to both original and processed images.
-
----
+FastAPI web service to upload product images and remove the background automatically using rembg.
 
 ## Features
-- Upload product images (input)
-- Automatic background removal (output)
-- List and download images by product EAN
-- REST API endpoints
-- Docker support
 
----
+- Upload product images
+- Remove the background automatically
+- REST API to list and download images
+- GPU support for faster processing
 
-## Installation & Usage
+## Installation and Usage (Docker)
 
-### Requirements
-- Python 3.10+
-- pip
-- (Optional) Docker
+This project is meant to run with Docker. By default, it tries to use the GPU for optimal processing speed.
 
-### 1. (Recommended) Create and activate a virtual environment
-It is recommended to use a virtual environment to isolate project dependencies, but it is not strictly required:
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # On Windows
-# or
-source .venv/bin/activate  # On Linux/Mac
+### Prerequisites
+
+1.  **Docker** and **Docker Compose** installed.
+2.  **(GPU mode only)**: NVIDIA drivers plus the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed on the host.
+
+### How to run
+
+1.  **Build and start the service:**
+    ```bash
+    docker-compose up --build
+    ```
+
+2.  **Check everything is working:**
+    - API docs: http://localhost:8000/docs
+    - Hardware status: http://localhost:8000/ (should report `"using_gpu": true` when the GPU is active)
+
+### No GPU available? (CPU mode)
+
+The `docker-compose.yml` file is configured to **require** an NVIDIA GPU. Without a GPU or the NVIDIA Container Toolkit, the container will not start.
+
+To run on **CPU only**, edit `docker-compose.yml` and **comment or delete** the `deploy` section:
+
+```yaml
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
 ```
 
-### 2. Install dependencies
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
+## API usage
 
-### 3. Run the application
-```bash
-uvicorn main:app --reload
-```
+1.  Use the `/upload/{ean}` endpoint to upload images.
+2.  Processed images will be stored in `/static/{ean}/output/`.
 
-### 4. Using Docker (optional)
-```bash
-docker build -t product-image-cleaner .
-docker run -p 8000:8000 product-image-cleaner
-```
+## Project structure
 
----
-
-## Folder Structure
-
-- `app/` - Main application code
-  - `routes/` - API endpoints
-  - `services/` - Business logic
-  - `utils/` - Utilities
-- `static/` - Product images (input/output). **Content is git-ignored, only structure is tracked.**
-- `requirements.txt` - Python dependencies
-- `Dockerfile` - Docker configuration
-
----
-
-## Notes
-- The `static/` folder is used to store uploaded and processed images. Its content is ignored by git, but the folder and its structure are included for clarity.
-- See `static/README.md` for more info.
-
----
+- `app/` - Application code
+- `static/` - Uploaded and processed images
+- `Dockerfile` - Docker image definition (CUDA 12.x ready)
+- `docker-compose.yml` - Service configuration

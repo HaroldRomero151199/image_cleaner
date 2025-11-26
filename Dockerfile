@@ -1,29 +1,39 @@
-# ✅ Usa una imagen oficial, estable y más compatible con rembg (3.10 recomendado)
-FROM python:3.10-slim
+# Dockerfile with GPU support
+# Uses an NVIDIA base image with CUDA 12.x and cuDNN
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
-# ✅ Define el directorio de trabajo
-WORKDIR /app
+# Prevent .pyc creation and keep logs unbuffered
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# ✅ Instala solo las dependencias necesarias para rembg (onnxruntime necesita libgl1)
+# Install Python 3.10 and system dependencies
+# libgl1-mesa-glx is required for opencv-python (used by rembg)
 RUN apt-get update && \
-    apt-get install -y libgl1-mesa-glx && \
+    apt-get install -y python3.10 python3.10-dev python3-pip libgl1-mesa-glx && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# ✅ Copia e instala requerimientos
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+WORKDIR /app
 
-# ✅ Copia todo el código de la app
+# Copy and install requirements first to leverage Docker cache
+COPY requirements.txt .
+# ISSUE: rembg installs onnxruntime (CPU) as a dependency, breaking onnxruntime-gpu
+# FIX: Install everything, then force ONLY onnxruntime-gpu
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip uninstall -y onnxruntime && \
+    pip install --no-cache-dir --force-reinstall onnxruntime-gpu
+
+# Copy the entire app code
 COPY . .
 
-# ✅ Asegura que exista la carpeta `static` (aunque puedes dejar que el código la cree dinámicamente si prefieres)
+# Create the static directory if missing
 RUN mkdir -p /app/static
 
-# ✅ Expón el puerto (FastAPI por defecto es 8000)
+# Expose the port
 EXPOSE 8000
 
-# ✅ Comando para iniciar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
+# Command to start the application
+# Runs from /app, calling the app.main module
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
