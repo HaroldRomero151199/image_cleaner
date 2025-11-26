@@ -1,13 +1,13 @@
-# Dockerfile con soporte GPU
-# Usa una imagen base de NVIDIA con CUDA 12.x y cuDNN
+# Dockerfile with GPU support
+# Uses an NVIDIA base image with CUDA 12.x and cuDNN
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
-# Evita que Python genere archivos .pyc y habilita logs
+# Prevent .pyc creation and keep logs unbuffered
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Instala Python 3.10 y dependencias del sistema
-# libgl1-mesa-glx es necesario para opencv-python (usado por rembg)
+# Install Python 3.10 and system dependencies
+# libgl1-mesa-glx is required for opencv-python (used by rembg)
 RUN apt-get update && \
     apt-get install -y python3.10 python3.10-dev python3-pip libgl1-mesa-glx && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
@@ -16,24 +16,24 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copia e instala requerimientos primero para aprovechar cache de Docker
+# Copy and install requirements first to leverage Docker cache
 COPY requirements.txt .
-# PROBLEMA: rembg instala onnxruntime (CPU) como dependencia, corrompiendo onnxruntime-gpu
-# SOLUCIÓN: Instalar todo, luego forzar SOLO onnxruntime-gpu
+# ISSUE: rembg installs onnxruntime (CPU) as a dependency, breaking onnxruntime-gpu
+# FIX: Install everything, then force ONLY onnxruntime-gpu
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip uninstall -y onnxruntime && \
     pip install --no-cache-dir --force-reinstall onnxruntime-gpu
 
-# Copia todo el código de la app
+# Copy the entire app code
 COPY . .
 
-# Crea la carpeta static si no existe
+# Create the static directory if missing
 RUN mkdir -p /app/static
 
-# Expón el puerto
+# Expose the port
 EXPOSE 8000
 
-# Comando para iniciar la aplicación
-# Ejecuta desde /app, llamando al módulo app.main
+# Command to start the application
+# Runs from /app, calling the app.main module
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

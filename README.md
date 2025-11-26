@@ -1,39 +1,39 @@
 # Product Image Cleaner
 
-Servicio web FastAPI para subir imágenes de productos y quitar el fondo automáticamente usando rembg.
+FastAPI web service to upload product images and remove the background automatically using rembg.
 
-## Características
+## Features
 
-- Subir imágenes de productos
-- Quitar fondo automáticamente
-- API REST para listar y descargar imágenes
-- Soporte para GPU (más rápido)
+- Upload product images
+- Remove the background automatically
+- REST API to list and download images
+- GPU support for faster processing
 
-## Instalación y Uso (Docker)
+## Installation and Usage (Docker)
 
-Este proyecto está diseñado para ejecutarse con Docker. Por defecto, intenta utilizar la GPU para un procesamiento óptimo.
+This project is meant to run with Docker. By default, it tries to use the GPU for optimal processing speed.
 
-### Prerrequisitos
+### Prerequisites
 
-1.  **Docker** y **Docker Compose** instalados.
-2.  **(Solo para modo GPU)**: Drivers de NVIDIA y [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) instalados en el host.
+1.  **Docker** and **Docker Compose** installed.
+2.  **(GPU mode only)**: NVIDIA drivers plus the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed on the host.
 
-### Pasos para ejecutar
+### How to run
 
-1.  **Construir y arrancar el servicio:**
+1.  **Build and start the service:**
     ```bash
     docker-compose up --build
     ```
 
-2.  **Verificar funcionamiento:**
-    - Documentación API: http://localhost:8000/docs
-    - Estado del hardware: http://localhost:8000/ (debería mostrar `"using_gpu": true` si la GPU está activa)
+2.  **Check everything is working:**
+    - API docs: http://localhost:8000/docs
+    - Hardware status: http://localhost:8000/ (should report `"using_gpu": true` when the GPU is active)
 
-### ¿Tienes problemas o no tienes GPU? (Modo CPU)
+### No GPU available? (CPU mode)
 
-El archivo `docker-compose.yml` está configurado por defecto para **exigir** una GPU NVIDIA. Si no tienes una GPU o no tienes configurado el NVIDIA Container Toolkit, el contenedor no iniciará.
+The `docker-compose.yml` file is configured to **require** an NVIDIA GPU. Without a GPU or the NVIDIA Container Toolkit, the container will not start.
 
-Para correrlo solo con **CPU**, edita el archivo `docker-compose.yml` y **comenta o elimina** la sección `deploy`:
+To run on **CPU only**, edit `docker-compose.yml` and **comment or delete** the `deploy` section:
 
 ```yaml
     # deploy:
@@ -45,14 +45,14 @@ Para correrlo solo con **CPU**, edita el archivo `docker-compose.yml` y **coment
     #           capabilities: [gpu]
 ```
 
-## Uso de la API
+## API usage
 
-1.  Usa el endpoint `/upload/{ean}` para subir imágenes.
-2.  Las imágenes procesadas se guardarán en `/static/{ean}/output/`.
+1.  Use the `/upload/{ean}` endpoint to upload images.
+2.  Processed images will be stored in `/static/{ean}/output/`.
 
-## Estructura
+## Project structure
 
-- `app/` - Código de la aplicación
-- `static/` - Imágenes subidas y procesadas
-- `Dockerfile` - Imagen Docker (preparada para CUDA 12.x)
-- `docker-compose.yml` - Configuración del servicio
+- `app/` - Application code
+- `static/` - Uploaded and processed images
+- `Dockerfile` - Docker image definition (CUDA 12.x ready)
+- `docker-compose.yml` - Service configuration

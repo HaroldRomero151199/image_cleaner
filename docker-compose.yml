@@ -10,7 +10,7 @@ services:
     volumes:
       - ./static:/app/static
       - ./app:/app/app
-    # Configuración para GPU NVIDIA
+    # NVIDIA GPU configuration
     deploy:
       resources:
         reservations:
