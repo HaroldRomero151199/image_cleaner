@@ -7,6 +7,7 @@ from rembg import remove, new_session
 from PIL import Image
 import io
 import logging
+import threading
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,7 @@ OUTPUT_DIR = "output"
 
 # Global session for rembg - always tries GPU first, falls back to CPU
 _rembg_session = None
+_session_lock = threading.Lock()
 
 
 def _get_rembg_session():
@@ -27,20 +29,25 @@ def _get_rembg_session():
     if _rembg_session is not None:
         return _rembg_session
     
-    providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-    
-    try:
-        logger.info("Initializing rembg session...")
-        _rembg_session = new_session(model_name="u2net", providers=providers)
+    with _session_lock:
+        # Double-check inside lock to prevent race conditions
+        if _rembg_session is not None:
+            return _rembg_session
         
-        # Check which provider is actually being used (access inner onnxruntime session)
-        active_providers = _rembg_session.inner_session.get_providers()
-        logger.info(f"rembg session initialized. ACTUALLY USING: {active_providers}")
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         
-        return _rembg_session
-    except Exception as e:
-        logger.error(f"FATAL: Failed to create rembg session: {str(e)}")
-        raise RuntimeError(f"Cannot initialize background removal service: {str(e)}")
+        try:
+            logger.info("Initializing rembg session...")
+            _rembg_session = new_session(model_name="u2net", providers=providers)
+            
+            # Check which provider is actually being used (access inner onnxruntime session)
+            active_providers = _rembg_session.inner_session.get_providers()
+            logger.info(f"rembg session initialized. ACTUALLY USING: {active_providers}")
+            
+            return _rembg_session
+        except Exception as e:
+            logger.error(f"FATAL: Failed to create rembg session: {str(e)}")
+            raise RuntimeError(f"Cannot initialize background removal service: {str(e)}")
 
 
 def get_hardware_status():
